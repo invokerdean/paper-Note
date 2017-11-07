@@ -17,7 +17,7 @@ sleep?” or “Does my elderly parent experience irregular heartbeats?”
 
 **目标**：remotely,without contacting
 
-**现有的非接触式**：more appropriate for controlled settings,fail in the presence of multiple users or extraneous motion,accurate only when close 
+**现有的非接触式**：more appropriate for controlled settings（严格的设定）,fail in the presence of multiple users or extraneous motion,accurate only when close 
 
 **Vital Radio**:works correctly in the presence of multiple users in the environment and can track the vital signs of the present users simultaneously
 
