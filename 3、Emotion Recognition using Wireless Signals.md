@@ -32,9 +32,9 @@ EQ-Radio’s key enabler is **a new algorithm** for extracting individual heartb
 因此，该算法找到合适的心搏（beats）分割，使连续心搏间期中的心跳信号的在形态学上最相似，同时允许beats信号的灵活变形（收缩或扩大）。
 
 **系统架构**:
-1. The first component is an FMCW radio that transmits RF signals and receives their reflections. The radio leverages the approach in [7] to **zoom in** on human reflections and **ignore** reflections from other objects in the scene.
-2. the resulting RF signal is **passed to** the beat extraction algorithm.**returns** a series of signal segments that correspond to the individual heartbeats
-3.the heartbeats – along with the captured breathing patterns from RF reflections – are passed to an emotion **classification sub-system**, The emotion classification sub-system computes heartbeat-based and respiration-based features recommended in the literature [34, 14, 48] and uses an **SVM classifier** to differentiate among various emotional states.
+1. The first component is an **FMCW radio** that transmits RF signals and receives their reflections. The radio leverages the approach in [7] to zoom in on human reflections and ignore reflections from other objects in the scene.
+2. the resulting RF signal is passed to the **beat extraction algorithm**.returns a series of signal segments that correspond to the individual heartbeats.
+3. the heartbeats – along with the captured breathing patterns from RF reflections – are passed to an emotion **classification sub-system**, The emotion classification sub-system computes heartbeat-based and respiration-based features recommended in the literature [34, 14, 48] and uses an **SVM classifier** to differentiate among various emotional states.
 
 **evaluate**:conducting user experiments with 30 subjects.依据该领域的文献 [34, 14, 48]来设计实验。要求被试者通过回忆相应的记忆（例如悲伤或愉快的记忆）来唤起特定的情绪。可以使用音乐或照片来辅助唤起。 在每个实验中，被试者报告他/她感受到的情绪，这种情绪持续的时间段。 在实验期间，同时使用EQ-Radio和商用ECG监视器来监视受试者，并且实验会录成视频，然后传递给基于图像的微软情感识别系统。
 
@@ -42,3 +42,22 @@ EQ-Radio’s key enabler is **a new algorithm** for extracting individual heartb
 
 **原因**:EQ-Radio的性能优秀是由于它能准确地从RF信号提取心跳。 具体来说，若对心跳间隔的估计存在40-50毫秒的误差，会使情绪识别精度降低到44％（如我们在§7.3中的图12所示）。 而我们的算法实现3.2毫秒的IBI的平均误差，这比平均beats length的0.4％还小。
 ## conclusion
+本文提出了一种依靠身体反射的无线信号来识别人的情绪的技术。 我们相信这是情绪识别新兴领域的重要一步。 随着人们对无线系统社区利用射频信号进行感知的兴趣越来越高，这项工作将射频感测的范围扩展到情感识别领域。 此外，这项工作为无线情感识别奠定了基础，我们预计随着无线传感技术的发展以及圈内人士在传感过程中采用更先进的机器学习机制，这些系统的准确性将会提高。
+我们的算法从RF复原了整个人类的心跳，并且心跳呈现出非常丰富的形态。 我们预计这一结果将为在情绪识别以及在非侵入健康监测诊断的背景下理解心跳形态的研究铺平道路。
+## contribution
+## procedure
+#### EQ-Radio OVERVIEW
+EQ-Radio是一种纯粹依靠无线信号的情绪识别系统。 它发射射频信号并捕获人体的反射, 然后分析这些反射来推断人的情绪状态。 根据已知的唤醒价模型将人的情绪状态分为四种基本情绪：anger, sadness, joy, and pleasure (i.e., contentment)。 EQ-Radio的系统架构由三个以流水线方式运行的组件组成：如上所述，一个FMCW无线电，发射射频信号，并获取在人体的反射。 beats提取算法，将捕获的反射作为输入，并返回一系列对应于人员的单个心跳的信号片段。 情绪分类子系统，根据捕获的生理信号计算情绪相关特征，即人的呼吸模式和心跳，并使用这些特征来识别人的情绪状态。
+#### CAPTURING THE RF SIGNAL
+uses a radar technique called Frequency Modulated Carrier Waves (FMCW)，There is a significant literature on FMCW radios and their use for obtaining an RF signal that is modulated by breathing and heartbeats [7, 11, 49]. 
+
+radio发射低功率信号并测量其反射时间，根据反射时间将不同物体/身体的射频反射分成buckets。 然后消除不随时间变化的静态物体的反射，并放大人体的反射。 它着眼于人处于准静态的时间段。 然后，它观察与travel distance有关的RF波的相位:φ(t) = 2πd(t)/λ.相位变化对应于呼吸引起的胸腔扩张和收缩引起的复合性位移，以及心跳引起的身体振动.相位的包络体现了吸气呼出过程的胸部位移，小凹陷是由于与脉动相关的微小的皮肤振动。 EQ-Radio对这个相位信号进行操作。
+#### BEAT EXTRACTION ALGORITHM
+一个人的情绪与她/他的心跳间隔的小变化有关; 因此，为了识别情绪，EQ-Radio需要从上述的RF相位信号中提取这些间隔。
+
+提取心跳间隔的主要挑战是反射的RF信号中beats的形态是未知的。具体而言，这些beats会导致反射信号的距离变化，但测量的位移取决于很多因素，包括人体和其相对EQ-Radio天线的确切姿势。（相比之下，ECG信号的心跳的形态具有已知的期望形状，并且使用简单的峰值检测算法可以提取心跳间隔。）由于不知道RF中这些心跳的形态，所以无法确定心跳何时开始结束，因此无法获得每个beat的间隔。实质上，这变成了鸡和蛋的问题：如果我们知道心跳的形态，那将有助于我们分割信号;另一方面，如果我们有反射信号的分割，我们可以用它来恢复人体心跳的形态。
+
+
+#### EMOTION CLASSIFICATION
+
+## implementation && evaluation
