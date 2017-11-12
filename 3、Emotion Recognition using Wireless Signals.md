@@ -85,7 +85,5 @@ f′′0 =[4f0 + (f1 + f−1) − 2(f2 + f−2) − (f3 + f−3) ]/16h2, (1)wher
 EQ-Radio从射频反射中恢复单个心跳（ individual heartbeats）后，使用心跳序列和呼吸信号来识别人的情绪。 下面描述EQ-Radio所采用的情感模型，及其特征提取和分类方法。
 ###### 2D Emotion Model
 EQ-Radio采用一个二维情感模型，其坐标轴是价和兴奋; 该模型是过去文献中对人类情绪进行分类的最普遍的方法。 该模型分为四种基本情绪状态：Sadness（负价和负性唤醒），Anger（负价和正性唤醒），Pleasure（正价和负性唤醒）和Joy（正价和正性唤醒）。(?)
-###### Feature Extraction
-###### Handling Dependence
 ## implementation && evaluation
 
