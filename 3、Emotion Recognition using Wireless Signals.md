@@ -2,8 +2,10 @@
 ## supplement
 心率变异性是指逐次心搏间期的微小差异，它产生于自主神经系统对心脏窦房结的调制，使得心搏间期一般存在几十毫秒的差异和波动。
 ## abbr.
-- ECG:Electrocardiograph 心电图
+- ECG: Electrocardiograph 心电图
 - IBI：inter-beat-intervals 心搏间期
+- SINR: signal-to-interference-and-noise
+ratio
 ## abstract
 本文提出一种新的技术从人体反射的RF信号来推断情绪，EQ-Radio发射信号，并分析其对人体的反射信号来识别情绪。EQ-Radio的原理是提出一种新的算法，可以从无线信号中提取单个心跳，其准确度与身上的心电监护仪相当。提取出的心跳随后用于计算一些情绪相关的特征，并送入Machine Learning情绪分类器。最终可以证明EQ-Radio准确率和最先进的情绪识别系统（该系统需要与ECG挂钩）相当。
 ## introduction
@@ -57,7 +59,33 @@ radio发射低功率信号并测量其反射时间，根据反射时间将不同
 
 提取心跳间隔的主要挑战是反射的RF信号中beats的形态是未知的。具体而言，这些beats会导致反射信号的距离变化，但测量的位移取决于很多因素，包括人体和其相对EQ-Radio天线的确切姿势。（相比之下，ECG信号的心跳的形态具有已知的期望形状，并且使用简单的峰值检测算法可以提取心跳间隔。）由于不知道RF中这些心跳的形态，所以无法确定心跳何时开始结束，因此无法获得每个beat的间隔。实质上，这变成了鸡和蛋的问题：如果我们知道心跳的形态，那将有助于我们分割信号;另一方面，如果我们有反射信号的分割，我们可以用它来恢复人体心跳的形态。
 
+这个问题由于另外两个因素而加剧。首先，反射信号是嘈杂的; 第二，由于呼吸的胸部位移比心跳位移高几个数量级。 换句话说，我们在低信噪比（signal-to-interference-and-noise）机制下运作，其中“干扰”是由于呼吸引起的胸部位移。
+
+为解决这些挑战，EQ-Radio首先处理RF信号以减轻呼吸的干扰。 然后制定并解决一个联合优化问题以恢复心搏间隔。 优化公式既不假设也不依赖于完美的分离效应。
+
+###### Mitigating the Impact of Breathing
+预处理步骤的目标是抑制呼吸信号并提高心跳信号的SINR。
+
+RF信号的相位与吸气呼气过程和脉冲效应（pulse effect）的复合位移成正比。由于吸气 - 呼气过程引起的位移比心跳引起的微小振动大几个数量级，所以RF相位信号是 以呼吸为主，但呼吸加速小于心跳。因此，我们可以通过对与加速度（而不是位移）成比例的信号进行操作来抑制呼吸并强调心跳。
+
+根据定义，加速度是位移的二阶导数。 因此，我们可以简单地对RF相位信号的二阶导数进行操作。 由于没有RF信号的解析表达式，所以必须使用数值方法来计算二阶导数。 我们使用下面的二阶微分器，因为它对噪声是robust的：
+
+f′′0 =[4f0 + (f1 + f−1) − 2(f2 + f−2) − (f3 + f−3) ]/16h2, (1)where f ′′ 0 refers to the second derivative at a particular sample, fi refers to the value of the time series i samples away, and h is the time interval between consecutive samples.
+
+在图3中，我们示出了具有相应加速度信号的示例RF相位信号。 图中显示，射频信号中呼吸比心跳更明显。 而在加速度信号中，存在对应于每个心跳周期的周期性模式（pattern），并且呼吸效应可以忽略不计。注意，尽管此时我们可以在加速度中观察心跳信号的周期性，但是由于信号噪声并且缺乏清晰的特征，仍然难以勾画出心搏间期的边界。
+
+###### Heartbeat Segmentation
+接下来，EQ-Radio需要将加速度信号分成单独的心跳。关键挑战是不知道心跳的形态来引导这个分割过程。 我们制定了一个优化问题，jointly恢复心跳的形态和分割。
+
+这种优化的直觉是，连续的心跳应具有相同的形态; 因此，虽然由于beats length不同，心跳可能会拉伸或压缩，但它们应具有相同的整体形状（overall shape）， 这意味着我们需要找到一个分割，能最大限度地减少所产生的beats之间的形状差异，同时兼顾未知beats形状以及beats可能会压缩或拉伸。 我们的公式不使用贪婪算法寻求局部最优选择，而是在所有可能分割中寻求最优解：
+###### Algorithm
+略
 
 #### EMOTION CLASSIFICATION
-
+EQ-Radio从射频反射中恢复单个心跳（ individual heartbeats）后，使用心跳序列和呼吸信号来识别人的情绪。 下面描述EQ-Radio所采用的情感模型，及其特征提取和分类方法。
+###### 2D Emotion Model
+EQ-Radio采用一个二维情感模型，其坐标轴是价和兴奋; 该模型是过去文献中对人类情绪进行分类的最普遍的方法。 该模型分为四种基本情绪状态：Sadness（负价和负性唤醒），Anger（负价和正性唤醒），Pleasure（正价和负性唤醒）和Joy（正价和正性唤醒）。(?)
+###### Feature Extraction
+###### Handling Dependence
 ## implementation && evaluation
+
