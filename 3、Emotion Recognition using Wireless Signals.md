@@ -83,7 +83,15 @@ f′′0 =[4f0 + (f1 + f−1) − 2(f2 + f−2) − (f3 + f−3) ]/16h2, (1)wher
 
 #### EMOTION CLASSIFICATION
 EQ-Radio从射频反射中恢复单个心跳（ individual heartbeats）后，使用心跳序列和呼吸信号来识别人的情绪。 下面描述EQ-Radio所采用的情感模型，及其特征提取和分类方法。
-###### 2D Emotion Model
+###### a. 2D Emotion Model
 EQ-Radio采用一个二维情感模型，其坐标轴是价和兴奋; 该模型是过去文献中对人类情绪进行分类的最普遍的方法。 该模型分为四种基本情绪状态：Sadness（负价和负性唤醒），Anger（负价和正性唤醒），Pleasure（正价和负性唤醒）和Joy（正价和正性唤醒）。(?)
+###### b. Feature Extraction
+EQ-Radio从心跳序列和呼吸信号中提取特征。 关于从人类心跳中提取emotion-dependent 特征的文献很多[34,48,4]，过去的技术使用一些贴身的传感器。 这些特征可分为时域分析，频域分析，时频分析，Poincar'e图（Poincar´e plot），样本熵 Sample Entropy 和去趋势波动分析Detrend Fluctuation Analysis。 EQ-Radio从IBI序列中提取27个特征（见表1），这些特征是根据[34]中的结果选择的。 [34，4]中详细解释了这些功能。
+EQ-Radio还应用了呼吸特征。 为了提取不规则的呼吸，EQ-Radio首先通过低通滤波后的峰值检测识别每个呼吸周期。 由于过去研究呼吸特征的工作推荐了时域特征[48]，EQ-Radio提取了时域特征（见表1第一行）。
+###### c. Handling Dependence
+对于同一情绪状态，展现生理特征因人而异，即便同一个人的这些特征在不同的日子也可能会有所不同。 这是由多种因素引起的，包括咖啡因的摄入，睡眠和一天的情绪基调。
+为了提取独立于用户和独立于时间的“更好的”特征，EQ-Radio包含一个baseline情绪状态：中性（neural）。 这个idea主要是利用生理特征的变化而不是绝对值。 因此，对于每个特征，EQ-Radio通过从减去给定人给定日期的中性状态下计算的对应值，来校准计算出的特征。
+###### d. Feature Selection and Classification
+如前所述，文献提出了许多将IBI与情绪联系起来的特征。 使用所有这些特征和有限的数据进行训练可能会导致过度拟合。 选择一组与情感最相关的特征不仅可以减少训练所需的数据量，而且能提高对测试数据的分类准确性。
 ## implementation && evaluation
 
