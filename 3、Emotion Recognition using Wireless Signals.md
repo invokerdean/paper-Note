@@ -4,8 +4,8 @@
 ## abbr.
 - ECG: Electrocardiograph 心电图
 - IBI：inter-beat-intervals 心搏间期
-- SINR: signal-to-interference-and-noise
-ratio
+- SINR: signal-to-interference-and-noise ratio
+- IRB: Institutional Review Board 机构审查委员会,美国每所研究型大学里都必须设立IRB。
 ## abstract
 本文提出一种新的技术从人体反射的RF信号来推断情绪，EQ-Radio发射信号，并分析其对人体的反射信号来识别情绪。EQ-Radio的原理是提出一种新的算法，可以从无线信号中提取单个心跳，其准确度与身上的心电监护仪相当。提取出的心跳随后用于计算一些情绪相关的特征，并送入Machine Learning情绪分类器。最终可以证明EQ-Radio准确率和最先进的情绪识别系统（该系统需要与ECG挂钩）相当。
 ## introduction
@@ -93,5 +93,47 @@ EQ-Radio还应用了呼吸特征。 为了提取不规则的呼吸，EQ-Radio首
 为了提取独立于用户和独立于时间的“更好的”特征，EQ-Radio包含一个baseline情绪状态：中性（neural）。 这个idea主要是利用生理特征的变化而不是绝对值。 因此，对于每个特征，EQ-Radio通过从减去给定人给定日期的中性状态下计算的对应值，来校准计算出的特征。
 ###### d. Feature Selection and Classification
 如前所述，文献提出了许多将IBI与情绪联系起来的特征。 使用所有这些特征和有限的数据进行训练可能会导致过度拟合。 选择一组与情感最相关的特征不仅可以减少训练所需的数据量，而且能提高对测试数据的分类准确性。
+之前有关特征选择的研究[48,34]使用了包装方法(wrapper method)，将特征选择问题当作搜索问题。 然而，由于需要选择的数量是指数级巨大的，包装方法必须使用启发式方法来搜索相关特征的所有可能的子集。 而EQ-Radio使用另一类特征选择机制，即嵌入式方法[26]; 这种方法使我们能够在训练模型的同时学习哪些功能对模型的精确性有最大的贡献。 为此，EQ-Radio使用l1-SVM， [65]在训练SVM分类器时选择相关特征的子集。 表1分别以粗体和斜体显示选定的IBI和呼吸特征。 
 ## implementation && evaluation
+我们描述了EQ-Radio的实现以及在提取个体心跳和识别人类情绪状态方面的经验表现。 所有的实验都得到了我们的IRB的批准。
+#### Implementation
+我们复制了由过去的无线生命体征监测工作设计的最先进的FMCW无线电[7]。 该器件产生一个信号，每4毫秒从5.46 GHz扫描到7.25 GHz，传输亚毫瓦功率。 参数如[7]中选择，使得传输系统符合FCC电子消费品法规。 FMCW无线电通过以太网连接到计算机。 接收到的信号被采样（数字化）并通过以太网传输到计算机。 EQ-Radio的算法在i7处理器和32GB RAM的Ubuntu 14.04计算机上实现。
+#### Evaluation of Heartbeat Extraction
+首先，我们想评估EQ-Radio分割算法在从身体反射的RF信号中提取心跳的准确性。
+###### Experimental Setup
+参与者：我们招募了30名参与者（10名女性）。 我们的subjects是在19〜77岁之间。 在实验过程中，subjects穿着不同面料的日常服装。
+实验环境：我们在标准办公大楼的5个不同房间进行实验。 评估环境包含办公家具，包括书桌，椅子，沙发和电脑。 当其他用户在房间中时进行实验。 实验环境的变化和其他用户的存在对结果的影响可以忽略不计，因为§4中描述的FMCW无线电消除了来自静态物体（例如家具）的反射，并隔离了来自不同人的反射[7]。
+度量：为了评估EQ-Radio的心跳提取算法，我们使用情感识别中常见的度量：
+Inter-Beat-Interval (IBI): The IBI measures the accuracy in identifying the boundaries of each individual beat.
+Root Mean Square of Successive Differences (RMSSD):
+This metric focuses on differences between successive beats.RMSSD is typically used as a measure of the parasympathetic nervous activity that controls the heart [57]. We calculate RMSSD for IBI sequences in a window of 2 minutes.
+Standard Deviation of NN Intervals (SDNN)：术语NN间隔指的是（IBI）。 因此，SDNN测量一个时间窗内beat length的标准偏差。 我们使用2分钟的时间窗。
+baseline:我们使用商用ECG监测器获得上述指标的Ground Truth。 我们使用AD8232评估板和3导联心电图监护仪来获取ECG信号。通过将这两个设备连接到共享时钟来完成FMCW信号和ECG信号之间的同步。
+###### Accuracy in comparison to ECG
+我们与30名参与者进行实验，收集了超过13万次心脏跳动。 使用EQ-Radio和ECG设备同时监测每个受试者。 我们处理数据以提取上述三个指标。 我们首先比较由EQ-Radio估计的IBI与从ECG监测器获得的IBI。 图5（a）示出了散点图，其中x和y坐标分别是从EQ-Radio和ECG导出的IBI。 颜色表示特定区域中点的密度。 对角线上的点在EQ-Radio和ECG中具有相同的IBI，而与对角线的距离与误差成正比。 可以观察到，所有点都聚集在对角线周围，因此EQ-Radio可以精确地估计IBI，而不考虑它们的长度。(?)
+
+我们对图5（b）中的误差进行了定量评估，图5（b）显示了每个心跳的EQ-Radio的IBI估计和基于ECG的IBI估计之间的差异的累积分布函数（CDF）。由于RF信号每4ms采样一次，CDF以4ms（The actual sampling rate of our receiver is 1MHz. However,because each FMCW sweep takes 4ms, we obtain one phase
+measurement every 4ms. For a detailed explanation, please refer to [7]）的间隔跳变.5 CDF显示第97百分位误差为8ms。我们的结果进一步表明，EQ-Radio的平均IBI估计误差是3.2ms。由于我们的实验中平均IBI是740ms，EQ-Radio平均估计出拍频长度在其正确值的0.43％以内。
+
+在图5（c）中，我们报告了情绪识别中常用的心跳变化度量的结果。该图显示了与基于接触的ECG传感器相比，从RF反射恢复SDNN和RMSSD时的误差的CDF。图表显示，这些指标中的每一个的中值误差都小于2％，即使是第90百分位误差也小于8％。这些情绪相关度量的高准确度，表明EQ-Radio的情绪识别准确性将与基于接触的技术一致。
+###### Accuracy for different orientations & distances
+在上面的实验中，对象距离EQ-Radio相对较近，距离3到4英尺，面对着设备。然而当对象远离或不面向设备时，也希望实现情绪识别。因此，我们将EQ-Radio的心跳分割准确度作为方向和距离的函数分别进行评估。首先，我们将距离固定为3英尺，并重复上述四个不同方向的实验：面向设备，背向设备，面向设备的左侧或右侧（垂直）。我们绘制了图6（a）中这四个方向的EQ-Radio的IBI估计值的中位数和标准偏差。该图显示，在所有方向上，中值误差保持在8ms以下（即beat length的1％）。正如预期的那样，当用户直接面对设备时，准确度是最高的。接下来，我们测试EQ-Radio的beat分割精度，作为它与参与者距离的函数。我们在受试者坐在与设备不同距离的椅子上进行实验。图6（b）显示了作为距离函数的IBI估计中的中值和标准偏差误差。甚至在10英尺处，中值误差小于8毫秒（即，拍长的1％）。
+#### Evaluation of Emotion Recognition
+In this section, we investigate whether EQ-Radio can accurately classify a person’s emotions based on RF reflections off her/his body. We also compare EQ-Radio’s performance with more traditional emotion classification methods that rely on ECG signals or images.
+###### Experimental Setup
+参与者：我们招募了12名参与者（6名女性）。其中6人（女性3人）有3〜7年的演艺经历。具有演艺经验的人在情绪管理方面更加熟练，这有助于收集高质量的情绪数据并提供一个参照组[48]。所有受试者都得到了补偿，所有的实验都得到了IRB的批准。
+
+实验设计：获取高质量的情感分析数据是困难的，特别是在识别情感真实情绪方面[48]。因此，仔细设计实验至关重要。我们根据以前使用生理信号进行情绪识别的工作来设计我们的实验[34,48]。具体而言，在实验之前，受试者单独准备刺激内容（例如，个人记忆，音乐，照片和视频）;在实验过程中，受试者独自坐在5个会议室中之一，并使用准备好的刺激物来引出一定的情绪状态。某些情绪与微笑，哭泣，微笑等小动作联系在一起（我们注意到§5.1中描述的区分过滤器减轻了这种小的移动。 但是，它不能处理更大的身体动作像走路。 虽然我们使用的FMCW无线电可以隔离来自不同用户的信号，正如我们在§7.2中所展示的，为了更好地引发情绪状态，在本实验中没有其他用户在房间中）。实验结束后，受试者报告他/她感觉到这种情绪的时期。在同一时期收集的数据标有受试者报告的情绪。
+
+在整个这些实验中，使用三个系统监测每个受试者：1）EQ-Radio，2）AD8232 ECG监视器，以及3）聚焦于受试者面部的摄像机。
+Ground Truth：如上所述，引导受试者唤起特定的情绪并报告他们感觉到这种情绪的时期。受试者报告的情绪用于标记相应时期的数据。这些标记为分类提供了基础。
+Baseline：我们将EQ-Radio的情绪分类和更传统的基于心电信号和图像分析情感识别方法进行比较。我们在相应的小节中描述这些系统的细节。
+Metrics & Visualization：当在特定的数据点上进行测试时，分类器为每个被考虑的情绪状态输出一个分数。数据点被赋予对应于最高分的情绪。我们将被分配正确情感的测试数据的百分比作为分类准确度的度量。(?)
+
+我们将分类的输出显示如下：回想一下，我们系统中的四种情绪可以表示为一个二维平面，其轴线是价和兴奋。每种情绪占据四个象限之一： Sadness (negative valence and negative arousal), Anger (negative valence and positive arousal), Pleasure (positive valence and negative arousal), and Joy (positive valence and positive arousal)。因此，我们可以通过在2D价唤醒空间中显示特定的测试数据来将分类结果可视化。如果这个点被正确的分类，它会落入正确的象限。
+对于任何数据点，我们可以计算价和唤醒得分（也就是计算坐标）：Svalence = max（Sjoy，Spleasure） - max（Ssadness，Sanger）和Sarousal = max（Sjoy，Sanger） - max（Spleasure，Ssadness） Spleasure，Ssadness和Sanger是分类器为四种情绪输出的分类得分。例如，考虑具有以下分数的数据点：S joy = 1，Spleasure = 0，Ssadness = 0，Sanger = 0 -i.e。，这个数据点是纯粹快乐的一个单位。这样的数据点落在右上象限的对角线上。一个数据点有一个高喜悦得分，但其他情绪小分数仍然会落在欢乐象限，但不完全在对角线上。 （查看图8的例子。）
+###### EQ-Radio’s emotion recognition accuracy
+为了评估EQ-Radio的情绪分类准确性，我们从12个被试者收集400个两分钟的信号序列，每个情感100个序列。 我们训练两种类型的情感分类器：一个依赖于人的分类器和一个独立于人的分类器。 每个依赖于人的分类器都经过了来自特定主题的数据的训练和测试。 训练和测试是在互相排斥的数据点上使用leave-one-out交叉验证来完成的[18]。 至于独立分类器，则对11个被试者进行训练，并对剩下的被试者进行测试，并针对不同的被试者重复该过程。
+我们首先报告依赖于人的分类结果。 使用价值和唤醒分数作为坐标。不同类型的分数表示数据的标签。 我们观察到，情绪聚集和隔离，表明这些情绪明显地编码在价和唤起，并且可以从EQ-Radio捕捉的特征解码。 我们也观察到这些点倾向于沿着对角线和反对角线聚集，这表明我们的分类器对预测具有高度的信心。 最后，图中还显示了每个受试者依赖于人的分类的准确性，总体平均准确率为87.0％
+
 
