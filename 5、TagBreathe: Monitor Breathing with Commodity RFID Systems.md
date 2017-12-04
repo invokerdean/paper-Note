@@ -23,7 +23,7 @@
 ## conclusion
 
 ## background
-## SYSTEM OVERVIEW
-## THE TagBreathe SYSTEM
-## IMPLEMENTATION
-## EVALUATION
+## system overview
+## the TagBreathe system
+## implementation
+## evaluation
