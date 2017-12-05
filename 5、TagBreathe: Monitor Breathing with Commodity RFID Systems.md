@@ -35,6 +35,12 @@ COTS RFID系统近年来发展了精确的定位和跟踪[35]。与传统的基�
 **θ = (2π/λ× 2d + c) mod 2π (1)**
 其中λ是波长，c是一个恒定的相位偏移量，它与阅读器天线和标签之间的距离无关,捕捉阅读器和标签电路的影响。 相位值在反向散射通信中每λ/2的距离以2π弧度周期重复(???)。 COTS RFID阅读器（例如Impinj R420 [1]）可以被编程为输出low level data用于应用开发。 在有多个标签的情况下，阅读器根据标准RFID协议的避免冲突，并且报告相位值而不受干扰。 TagBreathe旨在利用COTS RFID系统来测量贴在用户衣服上的RFID标签的相位值，同时监测多个用户的呼吸。
 ## III.system overview
+TagBreathe的intuition在于无线电波通过附着在人体上的商品标签上反射，因此无线电波的相位将被身体的呼吸运动调节。通过仔细分析相位值的数据流，我们的目标是通过以下三个关键技术来提取呼吸信号，我们将在第四节中详细阐述。 
+1. Phase Measurement and Preprocessing. COTS RFID阅读器测量附着在用户衣服上的标签的反向散射信号的相位值。 COTS RFID阅读器报告每个标签识别的相位值以及相位测量的时间戳。 TagBreathe不断读取相位值，并根据不同的用户在多个用户的情况下对相位值进行分组。相位值的变化指示身体运动。 
+2. Breath Signal Extraction. TagBreathe根据吸气和呼气期间胸腔引起的周期性变化影响相位值的观察结果来提取呼吸信号。我们利用人类呼吸速率的先验知识，并采用低通滤波器来提取呼吸信号。 
+3. Enhance Monitoring with Multiple Tags.为了减轻数据包丢失和视线路径阻塞的影响，TagBreathe为每个用户添加了多个标签。我们使用多个天线来确保监控区域的全面覆盖。商品读卡器安排天线，并以循环方式工作，而不受天线之间的干扰。 TagBreathe结合了标签阵列中的多个数据流，在实际情况下增强了监控的鲁棒性。
 ## IV.the TagBreathe system
+#### Low level data characterization
+####
 ## V.implementation
 ## VI.evaluation
